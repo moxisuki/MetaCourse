@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,7 +22,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
@@ -66,7 +70,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.linw.metacourse.data.MainTabs
 import app.linw.metacourse.ui.theme.MetaCourseTheme
-import java.lang.Exception
 
 const val TAG = "MetaCourseDebug"
 
@@ -116,7 +119,7 @@ fun MainPage() {
                 composable(MainTabs.INFO.route) { Info() }
             }
         }
-        NavigationBar(Modifier.weight(0.1F), containerColor = Color.White) {
+        NavigationBar(Modifier.weight(0.1F), containerColor = Color.Transparent) {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
             items.forEachIndexed { index, item ->
@@ -174,19 +177,93 @@ fun Info() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Home(modifier: Modifier = Modifier) {
-
-    Column(modifier = Modifier.fillMaxSize()) {
+    var courseData = remember {
+        mutableStateListOf(
+            mutableStateMapOf(
+                "name" to "上午第一节",
+                "start_time" to "7:05",
+                "end_time" to "7:37"
+            )
+        )
+    }
+    var selectedTag = remember {
+        mutableStateOf(0)
+    }
+    var isDeleted = remember {
+        mutableStateOf(false)
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.Transparent)
+    ) {
         Card(
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .padding(start = 40.dp, end = 40.dp, top = 15.dp)
-                .height(100.dp)
+                .height(200.dp)
                 .fillMaxWidth()
         ) {
+            Column(modifier = Modifier.padding(15.dp)) {
+                Row(
+                    modifier = Modifier.weight(0.15F)
+                ) {
+                    Text(
+                        text = "上午",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier
+                            .weight(0.5F)
+                            .align(CenterVertically)
+                    )
+                    Row(modifier = Modifier.weight(0.2F)) {
+                        IconButton(
+                            onClick = { /*TODO*/ }) {
+                            Icon(Icons.Default.Add, "Add")
+                        }
+                        IconButton(
+                            onClick = {
+                                isDeleted.value = !isDeleted.value
+                            }) {
+                            Icon(if(isDeleted.value) Icons.Default.Check else Icons.Default.Close, "Close")
+                        }
+                    }
+                }
+                LazyColumn(Modifier.weight(0.85F)) {
+                    items(5) {
+                        TimeItem(isDeleted)
+                    }
+                }
+            }
         }
     }
 }
 
+@Composable
+fun TimeItem(isDeleted: MutableState<Boolean>) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(50.dp)
+    ) {
+        TextButton(onClick = {}, modifier = Modifier.weight(0.4F)) {
+            Text(text = "7:05", style = MaterialTheme.typography.bodyLarge)
+        }
+        var icon =
+            Icon(
+                imageVector = if (!isDeleted.value) Icons.Default.ArrowForward else Icons.Default.Delete,
+                contentDescription = "To",
+                Modifier
+                    .weight(0.2F)
+                    .fillMaxHeight()
+                    .align(CenterVertically)
+                    .padding(10.dp)
+            )
+        TextButton(onClick = {}, modifier = Modifier.weight(0.4F)) {
+            Text(text = "7:37", style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+    Divider()
+}
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -214,7 +291,7 @@ fun EditorPanel() {
                     .align(Alignment.CenterHorizontally)
                     .weight(0.5F)
             ) {
-                if(selectedTag.value > -1) {
+                if (selectedTag.value > -1) {
                     TextField(
                         label = {
                             Text(text = "课程名称")
@@ -247,8 +324,13 @@ fun EditorPanel() {
                         mutableListOf<String>("AM-Ⅰ", "AM-Ⅱ", "AM-Ⅲ", "AM-Ⅳ", "AM-Ⅵ")
 
                     SelectedTextField(classes, "课程位置")
-                }else{
-                    Text(text = "请先选择一个课时", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center, style = MaterialTheme.typography.titleLarge)
+                } else {
+                    Text(
+                        text = "请先选择一个课时",
+                        modifier = Modifier.fillMaxSize(),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleLarge
+                    )
                 }
             }
 
